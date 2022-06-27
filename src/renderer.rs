@@ -32,10 +32,11 @@ impl Renderer for CpuRenderer {
 		for index in 0..self.surface.len() {
 			self.surface[index] = {
 				let centered_coord = {
-					let coord = vec2(
-						(index as f32 / self.width) % 1.0,
+					let mut coord = vec2(
+						(index as f32 / self.width) % 1.,
 						(index as f32 / self.width).floor() / self.height,
 					);
+					coord.y = coord.y * -1. + 1.; // Flip y axis
 					coord * 2.0 - vec2(1.0, 1.0) // Remap 0..1 to -1..1
 				};
 				shader(&self.surface[index], centered_coord)

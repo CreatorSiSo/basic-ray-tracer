@@ -1,6 +1,6 @@
 #![deny(clippy::all)]
 
-use nalgebra_glm::{vec3, vec3_to_vec4, vec4, TVec4};
+use nalgebra_glm::{vec3, vec3_to_vec4, vec4, TVec, TVec3, TVec4, Vec4};
 use std::error::Error;
 use std::fs::File;
 use std::io::BufWriter;
@@ -13,34 +13,41 @@ use types::Ray;
 const WIDTH: u32 = 2000;
 const HEIGHT: u32 = 2000;
 
+// TODO: Use tuple of (Option<f32>, Option<f32>)
+fn hit_sphere(center: TVec3<f32>, radius: f32, ray: &Ray<f32>) -> Option<f32> {
+	let moved_origin = ray.origin - center;
+
+	let a = nalgebra_glm::dot(&ray.dir, &ray.dir);
+	let b = 2. * nalgebra_glm::dot(&moved_origin, &ray.dir);
+	let c = nalgebra_glm::dot(&moved_origin, &moved_origin) - radius * radius;
+
+	let discriminant = b * b - 4. * a * c;
+
+	let first = (-1. * b - (discriminant).sqrt()) / 2. * a;
+	let _second = (-1. * b + (discriminant).sqrt()) / 2. * a;
+
+	return if discriminant >= 0. {
+		Some(first)
+	} else {
+		None
+	};
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
 	let mut renderer = CpuRenderer::new(WIDTH as f32, HEIGHT as f32);
 	renderer.render_layer(|_, coord| {
 		let ray = Ray {
-			origin: vec3(0., 0., -1.),
-			dir: vec3(coord.x, coord.y, 1.).normalize(),
+			origin: vec3(0., 0., 0.),
+			dir: vec3(coord.x, coord.y, -1.).normalize(),
 		};
-		let sphere_radius = 0.7;
 
-		let a = nalgebra_glm::dot(&ray.dir, &ray.dir);
-		let b = 2. * nalgebra_glm::dot(&ray.origin, &ray.dir);
-		let c = nalgebra_glm::dot(&ray.origin, &ray.origin) - sphere_radius * sphere_radius;
+		if let Some(dist) = hit_sphere(vec3(0., 0., -1.), 0.5, &ray) {
+			let normal = ray.at(dist) - vec3(0., 0., -1.);
+			return vec4(normal.x + 1., normal.y + 1., normal.z + 1., 2.) * 0.5;
+		}
 
-		let discriminant = b * b - 4. * a * c;
-
-		// First hit
-		let dist = (-1. * b - (discriminant).sqrt()) / 2. * a;
-		// Second hit
-		let _dist2 = (-1. * b + (discriminant).sqrt()) / 2. * a;
-
-		let surface_pos = ray.at(dist);
-
-		return if discriminant >= 0. {
-			vec4(surface_pos.x, surface_pos.y, surface_pos.z, 1.)
-		// vec4(normal.x, normal.y, normal.z, 1.)
-		} else {
-			vec4(coord.x, coord.y, 0., 0.5)
-		};
+		vec4(coord.x, coord.y, 0., 0.4)
+		// vec4(0., 0., 0., 1.0)
 	});
 
 	// Write final image to png file
