@@ -1,6 +1,6 @@
 #![deny(clippy::all)]
 
-use cgmath::{vec3, vec4};
+use cgmath::{vec3, vec4, InnerSpace};
 use std::error::Error;
 use std::fs::File;
 use std::io::BufWriter;
@@ -15,8 +15,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 	let mut renderer = CpuRenderer::new(WIDTH as f32, HEIGHT as f32);
 	renderer.render_layer(|_, coord| {
 		let ray_origin = vec3(0., 0., -1.);
-		let ray_direction = vec3(coord.x, coord.y, -1.);
-		let sphere_radius = 0.5;
+		let ray_direction = vec3(coord.x, coord.y, 1.).normalize_to(1.);
+		let sphere_radius = 0.7;
 
 		let a = cgmath::dot(ray_direction, ray_direction);
 		let b = 2. * cgmath::dot(ray_origin, ray_direction);
@@ -24,8 +24,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 		let discriminant = b * b - 4. * a * c;
 
+		// First hit
+		let dist = (-1. * b - (discriminant).sqrt()) / 2. * a;
+		// Second hit
+		let _dist2 = (-1. * b + (discriminant).sqrt()) / 2. * a;
+
 		return if discriminant >= 0. {
-			vec4(1., 0., 1., 1.)
+			vec4(dist, dist, dist, 1.)
 		} else {
 			vec4(coord.x, coord.y, 0., 0.5)
 		};
