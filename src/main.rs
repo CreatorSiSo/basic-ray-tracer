@@ -1,6 +1,6 @@
 #![deny(clippy::all)]
 
-use nalgebra_glm::{vec3, vec3_to_vec4, vec4, TVec, TVec3, TVec4, Vec4};
+use nalgebra_glm::{vec3, vec4, TVec3};
 use std::error::Error;
 use std::fs::File;
 use std::io::BufWriter;
@@ -61,8 +61,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 	let mut writer = encoder.write_header()?;
 
-	let data = renderer.final_image();
-	writer.write_image_data(data.as_slice())?;
+	writer.write_image_data(renderer.final_image().as_slice())?;
 
 	Ok(())
 }
