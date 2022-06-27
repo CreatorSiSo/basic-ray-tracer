@@ -1,10 +1,10 @@
-use cgmath::{vec4, Vector2, Vector4};
+use cgmath::{vec2, vec4, Vector2, Vector4};
 
 pub trait Renderer {
 	// fn resize_surface(&mut self, width: u32, height: u32);
 	// fn update(&mut self);
 
-	fn render(&mut self, shader: impl Fn(&Vector4<f32>, Vector2<f32>) -> Vector4<f32>);
+	fn render_layer(&mut self, shader: impl Fn(&Vector4<f32>, Vector2<f32>) -> Vector4<f32>);
 
 	fn final_image(&self) -> Vec<u8>;
 }
@@ -28,14 +28,17 @@ impl CpuRenderer {
 }
 
 impl Renderer for CpuRenderer {
-	fn render(&mut self, shader: impl Fn(&Vector4<f32>, Vector2<f32>) -> Vector4<f32>) {
+	fn render_layer(&mut self, shader: impl Fn(&Vector4<f32>, Vector2<f32>) -> Vector4<f32>) {
 		for index in 0..self.surface.len() {
 			self.surface[index] = {
-				let coord = Vector2 {
-					x: (index as f32 / self.width) % 1.0,
-					y: (index as f32 / self.width).floor() / self.height,
+				let centered_coord = {
+					let coord = Vector2 {
+						x: (index as f32 / self.width) % 1.0,
+						y: (index as f32 / self.width).floor() / self.height,
+					};
+					coord * 2.0 - vec2(1.0, 1.0) // Remap 0..1 to -1..1
 				};
-				shader(&self.surface[index], coord)
+				shader(&self.surface[index], centered_coord)
 			}
 		}
 	}

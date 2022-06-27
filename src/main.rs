@@ -1,6 +1,6 @@
 #![deny(clippy::all)]
 
-use cgmath::vec4;
+use cgmath::{vec3, vec4};
 use std::error::Error;
 use std::fs::File;
 use std::io::BufWriter;
@@ -8,15 +8,31 @@ use std::io::BufWriter;
 mod renderer;
 use renderer::{CpuRenderer, Renderer};
 
-const WIDTH: u32 = 1920;
-const HEIGHT: u32 = 1080;
+const WIDTH: u32 = 2000;
+const HEIGHT: u32 = 2000;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	let path = "/home/creatorsiso/dev/basic_ray_tracer/result.png";
-
 	let mut renderer = CpuRenderer::new(WIDTH as f32, HEIGHT as f32);
-	renderer.render(|_, coord| vec4(coord.x, coord.y * 0.5, 0.0, 1.0));
+	renderer.render_layer(|_, coord| {
+		let ray_origin = vec3(0., 0., -1.);
+		let ray_direction = vec3(coord.x, coord.y, -1.);
+		let sphere_radius = 0.5;
 
+		let a = cgmath::dot(ray_direction, ray_direction);
+		let b = 2. * cgmath::dot(ray_origin, ray_direction);
+		let c = cgmath::dot(ray_origin, ray_origin) - sphere_radius * sphere_radius;
+
+		let discriminant = b * b - 4. * a * c;
+
+		return if discriminant >= 0. {
+			vec4(1., 0., 1., 1.)
+		} else {
+			vec4(coord.x, coord.y, 0., 0.5)
+		};
+	});
+
+	// Write final image to png file
+	let path = "/home/creatorsiso/dev/basic_ray_tracer/result.png";
 	let file = File::create(path)?;
 	let w = BufWriter::new(file);
 
