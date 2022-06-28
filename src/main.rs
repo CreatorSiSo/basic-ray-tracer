@@ -7,19 +7,24 @@ use std::fs::File;
 use std::io::BufWriter;
 
 mod hittable;
-mod object;
+mod primitive;
 mod ray;
 mod renderer;
-use object::Sphere;
+mod scene;
+use primitive::Primitive;
+use primitive::Sphere;
 use ray::Ray;
 use renderer::{CpuRenderer, Renderer};
+use scene::Scene;
 
 const WIDTH: u32 = 2000;
 const HEIGHT: u32 = 2000;
 
 fn main() -> Result<(), Box<dyn Error>> {
 	let mut renderer = CpuRenderer::new(WIDTH as f32, HEIGHT as f32);
-	let sphere = Sphere::new(vec3a(0., 0., -1.), 0.5);
+	let mut scene = Scene::default();
+	scene.push(Primitive::Sphere(Sphere::new(vec3a(0., 0., -1.), 0.5)));
+	scene.push(Primitive::Sphere(Sphere::new(vec3a(0., -100., -50.), 100.)));
 
 	renderer.render_layer(|_, coord| {
 		let ray = Ray {
@@ -27,7 +32,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 			dir: vec3a(coord.x, coord.y, -1.).normalize(),
 		};
 
-		if let Some(HitRecord { normal, .. }) = sphere.hit(ray) {
+		if let Some(HitRecord { normal, .. }) = scene.hit(&ray) {
 			let normal = (normal + 1.) * 0.5;
 			return vec4(normal.x, normal.y, normal.z, 1.);
 		}

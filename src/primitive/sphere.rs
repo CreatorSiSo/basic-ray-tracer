@@ -5,8 +5,8 @@ use crate::ray::Ray;
 
 #[derive(Debug)]
 pub struct Sphere {
-	center: Vec3A,
-	radius: f32,
+	pub center: Vec3A,
+	pub radius: f32,
 }
 
 impl Sphere {
@@ -23,7 +23,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-	fn hit(&self, ray: Ray) -> Option<HitRecord> {
+	fn hit(&self, ray: &Ray) -> Option<HitRecord> {
 		let moved_origin = ray.origin - self.center;
 
 		let a = Vec3A::dot(ray.dir, ray.dir);

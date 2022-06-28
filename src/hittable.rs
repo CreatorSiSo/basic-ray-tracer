@@ -20,5 +20,5 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-	fn hit(&self, ray: Ray) -> Option<HitRecord>;
+	fn hit(&self, ray: &Ray) -> Option<HitRecord>;
 }
