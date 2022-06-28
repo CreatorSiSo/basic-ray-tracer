@@ -1,16 +1,16 @@
-use nalgebra_glm::{vec2, vec4, TVec2, TVec4};
+use glam::{vec2, vec4, Vec2, Vec4};
 
 pub trait Renderer {
 	// fn resize_surface(&mut self, width: u32, height: u32);
 	// fn update(&mut self);
 
-	fn render_layer(&mut self, shader: impl Fn(&TVec4<f32>, TVec2<f32>) -> TVec4<f32>);
+	fn render_layer(&mut self, shader: impl Fn(&Vec4, Vec2) -> Vec4);
 
 	fn final_image(&self) -> Vec<u8>;
 }
 
 pub struct CpuRenderer {
-	surface: Vec<TVec4<f32>>,
+	surface: Vec<Vec4>,
 	width: f32,
 	height: f32,
 }
@@ -28,7 +28,7 @@ impl CpuRenderer {
 }
 
 impl Renderer for CpuRenderer {
-	fn render_layer(&mut self, shader: impl Fn(&TVec4<f32>, TVec2<f32>) -> TVec4<f32>) {
+	fn render_layer(&mut self, shader: impl Fn(&Vec4, Vec2) -> Vec4) {
 		for index in 0..self.surface.len() {
 			self.surface[index] = {
 				let centered_coord = {
