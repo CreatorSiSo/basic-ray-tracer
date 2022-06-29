@@ -1,5 +1,5 @@
 [package]
-name = "basic_ray_tracer"
+name = "basic-ray-tracer"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 glam = "^0.21"
 png = "^0.17"
+rand = "0.8.5"
 # env_logger = "^0.9"
 # winit = "^0.26"
 # winit_input_helper = "^0.12"
