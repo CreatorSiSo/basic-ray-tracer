@@ -10,7 +10,6 @@ mod primitive;
 mod ray;
 mod renderer;
 mod scene;
-use primitive::Primitive;
 use primitive::{Primitive, Sphere};
 use ray::Ray;
 use renderer::{CpuRenderer, Renderer};
