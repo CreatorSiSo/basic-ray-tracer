@@ -1,33 +1,37 @@
 #![deny(clippy::all)]
 
 use glam::{vec2, vec3a, vec4, Vec2, Vec4};
-use hittable::{HitRecord, Hittable};
 use std::fs::File;
 use std::io::BufWriter;
 
+mod camera;
 mod hittable;
 mod primitive;
 mod ray;
+mod renderer;
 mod scene;
+use camera::Camera;
+use hittable::{HitRecord, Hittable};
 use primitive::{Primitive, Sphere};
-use ray::Ray;
+use renderer::CpuRenderer;
 use scene::Scene;
 
-const WIDTH: f32 = 128.;
-const HEIGHT: f32 = 128.;
+const WIDTH: u32 = 128;
+const HEIGHT: u32 = 128;
 
 fn main() -> Result<(), std::io::Error> {
-	let mut surface = vec![Vec4::ZERO; WIDTH as usize * HEIGHT as usize];
+	let camera = Camera::Orthographic {
+		width: WIDTH,
+		height: HEIGHT,
+	};
+	let mut renderer = CpuRenderer::new(camera);
 
 	let mut scene = Scene::default();
 	scene.push(Primitive::Sphere(Sphere::new(vec3a(0., 0., -1.), 0.5)));
-	scene.push(Primitive::Sphere(Sphere::new(vec3a(0., -100., -50.), 100.)));
+	scene.push(Primitive::Sphere(Sphere::new(vec3a(0.6, 0.3, -2.), 1.)));
 
 	let shader = |_previous: &Vec4, coord: Vec2| -> Vec4 {
-		let ray = Ray {
-			origin: vec3a(0., 0., 0.),
-			dir: vec3a(coord.x, coord.y, -1.).normalize(),
-		};
+		let ray = renderer.camera.get_ray(coord.x, coord.y);
 
 		if let Some(HitRecord { normal, .. }) = scene.hit(&ray) {
 			let normal = (normal + 1.) * 0.5;
@@ -38,19 +42,20 @@ fn main() -> Result<(), std::io::Error> {
 		// vec4(0., 0., 0., 1.0)
 	};
 
-	for (index, pixel) in surface.iter_mut().enumerate() {
+	for (index, pixel) in renderer.surface.iter_mut().enumerate() {
 		let centered_coord = {
 			let mut coord = vec2(
-				(index as f32 / WIDTH) % 1.,
-				(index as f32 / WIDTH).floor() / HEIGHT,
+				(index as f32 / WIDTH as f32) % 1.,
+				(index as f32 / WIDTH as f32).floor() / HEIGHT as f32,
 			);
 			coord.y = coord.y * -1. + 1.; // Flip y axis
 			coord * 2.0 - vec2(1.0, 1.0) // Remap 0..1 to -1..1
 		};
-		*pixel = shader(pixel, centered_coord);
+		*pixel += shader(pixel, centered_coord);
 	}
 
-	let final_image: Vec<u8> = surface
+	let final_image: Vec<u8> = renderer
+		.surface
 		.iter()
 		.flat_map(|color| {
 			[

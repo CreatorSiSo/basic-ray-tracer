@@ -6,6 +6,10 @@ pub struct Ray {
 }
 
 impl Ray {
+	pub fn _new(origin: Vec3A, dir: Vec3A) -> Self {
+		Self { origin, dir }
+	}
+
 	pub fn at(&self, t: f32) -> Vec3A {
 		self.origin + self.dir * t
 	}
