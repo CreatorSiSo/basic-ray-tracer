@@ -42,9 +42,9 @@ impl CpuRenderer {
 impl Renderer for CpuRenderer {
 	fn resize_surface(&mut self, width: f32, height: f32) {
 		self.finished = false;
-		self.surface.resize_with((width * height) as usize, default);
 		self.width = width;
 		self.height = height;
+		self.surface.resize_with((width * height) as usize, default);
 	}
 
 	fn render(&mut self) {
@@ -53,17 +53,14 @@ impl Renderer for CpuRenderer {
 
 		for (index, pixel) in self.surface.iter_mut().enumerate() {
 			for _ in 0..self.samples {
+				// Coordinates with 0..1 range
 				let mut coord = vec2(
-					((
-						// Random offset for antialiasing + Index which increases by one each "column"
-						rng_iter.next().unwrap_or_default() + index as f32
-					) / self.width)
-						% 1.,
-					(
-						// Random offset for antialiasing + Index which increases by one each "row"
-						rng_iter.next().unwrap_or_default() + (index as f32 / self.width).floor()
-					) / self.height,
+					// Random offset for antialiasing + Index which increases by one each "column"
+					((rng_iter.next().unwrap_or_default() + index as f32) / self.width) % 1.,
+					// Random offset for antialiasing + Index which increases by one each "row"
+					(rng_iter.next().unwrap_or_default() + (index as f32 / self.width).floor()) / self.height,
 				);
+
 				coord.y = coord.y * -1. + 1.; // Flip y axis
 				coord = coord * 2.0 - vec2(1.0, 1.0); // Remap 0..1 to -1..1
 
