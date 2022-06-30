@@ -52,8 +52,15 @@ fn main() -> Result<(), std::io::Error> {
 	for (index, pixel) in renderer.surface.iter_mut().enumerate() {
 		for _ in 0..renderer.samples {
 			let mut coord = vec2(
-				((index as f32 + rng_iter.next().unwrap_or_default()) / WIDTH_F) % 1.,
-				((index as f32 / WIDTH_F).floor() + rng_iter.next().unwrap_or_default()) / HEIGHT_F,
+				((
+					// Random offset for antialiasing + Index which increases by one each "column"
+					rng_iter.next().unwrap_or_default() + index as f32
+				) / WIDTH_F)
+					% 1.,
+				(
+					// Random offset for antialiasing + Index which increases by one each "row"
+					rng_iter.next().unwrap_or_default() + (index as f32 / WIDTH_F).floor()
+				) / HEIGHT_F,
 			);
 			coord.y = coord.y * -1. + 1.; // Flip y axis
 			coord = coord * 2.0 - vec2(1.0, 1.0); // Remap 0..1 to -1..1
