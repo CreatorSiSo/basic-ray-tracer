@@ -1,6 +1,7 @@
 #![deny(clippy::all)]
 
 use glam::{vec2, vec3a, vec4, Vec2, Vec4};
+use rand::Rng;
 use std::fs::File;
 use std::io::BufWriter;
 
@@ -18,14 +19,16 @@ use renderer::{CpuRenderer, Renderer};
 use scene::Scene;
 
 const WIDTH: u32 = 128;
+const WIDTH_F: f32 = WIDTH as f32;
 const HEIGHT: u32 = 128;
+const HEIGHT_F: f32 = HEIGHT as f32;
 
 fn main() -> Result<(), std::io::Error> {
 	let camera = Camera::Orthographic {
 		width: WIDTH,
 		height: HEIGHT,
 	};
-	let mut renderer = CpuRenderer::new(camera);
+	let mut renderer = CpuRenderer::new(camera, 128);
 
 	let mut scene = Scene::default();
 	scene.push(Primitive::Sphere(Sphere::new(vec3a(0., 0., -1.), 0.5)));
@@ -43,16 +46,19 @@ fn main() -> Result<(), std::io::Error> {
 		// vec4(0., 0., 0., 1.0)
 	};
 
+	let rng = rand::thread_rng();
+	let mut rng_iter = rng.sample_iter(rand::distributions::Uniform::<f32>::new(0., 1.));
+
 	for (index, pixel) in renderer.surface.iter_mut().enumerate() {
-		let centered_coord = {
+		for _ in 0..renderer.samples {
 			let mut coord = vec2(
-				(index as f32 / WIDTH as f32) % 1.,
-				(index as f32 / WIDTH as f32).floor() / HEIGHT as f32,
+				((index as f32 + rng_iter.next().unwrap_or_default()) / WIDTH_F) % 1.,
+				((index as f32 / WIDTH_F).floor() + rng_iter.next().unwrap_or_default()) / HEIGHT_F,
 			);
 			coord.y = coord.y * -1. + 1.; // Flip y axis
-			coord * 2.0 - vec2(1.0, 1.0) // Remap 0..1 to -1..1
-		};
-		*pixel += shader(pixel, centered_coord);
+			coord = coord * 2.0 - vec2(1.0, 1.0); // Remap 0..1 to -1..1
+			*pixel += shader(pixel, coord);
+		}
 	}
 
 	write_file(
@@ -68,7 +74,7 @@ where
 	let file = File::create(path)?;
 	let w = BufWriter::new(file);
 
-	let mut encoder = png::Encoder::new(w, WIDTH as u32, HEIGHT as u32);
+	let mut encoder = png::Encoder::new(w, WIDTH, HEIGHT);
 	encoder.set_color(png::ColorType::Rgba);
 	encoder.set_depth(png::BitDepth::Eight);
 

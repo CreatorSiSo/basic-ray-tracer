@@ -13,15 +13,17 @@ pub trait Renderer {
 pub struct CpuRenderer {
 	pub camera: Camera,
 	pub surface: Vec<Vec4>,
+	pub samples: u16,
 	finished: bool,
 }
 
 impl CpuRenderer {
-	pub fn new(camera: Camera) -> Self {
+	pub fn new(camera: Camera, samples: u16) -> Self {
 		match camera {
 			Camera::Orthographic { width, height } | Camera::_Perspective { width, height } => Self {
 				camera,
 				surface: vec![Vec4::ZERO; width as usize * height as usize],
+				samples,
 				finished: false,
 			},
 		}
@@ -31,9 +33,7 @@ impl CpuRenderer {
 impl Renderer for CpuRenderer {
 	fn resize_surface(&mut self, width: u32, height: u32) {
 		self.finished = false;
-		self
-			.surface
-			.resize_with((width * height) as usize, || default());
+		self.surface.resize_with((width * height) as usize, default);
 		self.camera.resize(width, height);
 	}
 
@@ -46,11 +46,12 @@ impl Renderer for CpuRenderer {
 			.surface
 			.iter()
 			.flat_map(|color| {
+				let scaled_color = *color * (1. / self.samples as f32);
 				[
-					(color.x * 255.0) as u8,
-					(color.y * 255.0) as u8,
-					(color.z * 255.0) as u8,
-					(color.w * 255.0) as u8,
+					(scaled_color.x * 255.0) as u8,
+					(scaled_color.y * 255.0) as u8,
+					(scaled_color.z * 255.0) as u8,
+					(scaled_color.w * 255.0) as u8,
 				]
 				.into_iter()
 			})
