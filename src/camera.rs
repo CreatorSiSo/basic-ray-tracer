@@ -21,4 +21,17 @@ impl Camera {
 			},
 		}
 	}
+
+	pub fn resize(&mut self, new_width: u32, new_height: u32) {
+		match self {
+			Camera::Orthographic { width, height } => {
+				*width = new_width;
+				*height = new_height;
+			}
+			Camera::_Perspective { width, height } => {
+				*width = new_width;
+				*height = new_height;
+			}
+		}
+	}
 }

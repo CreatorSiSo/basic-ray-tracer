@@ -10,10 +10,11 @@ mod primitive;
 mod ray;
 mod renderer;
 mod scene;
+mod utils;
 use camera::Camera;
 use hittable::{HitRecord, Hittable};
 use primitive::{Primitive, Sphere};
-use renderer::CpuRenderer;
+use renderer::{CpuRenderer, Renderer};
 use scene::Scene;
 
 const WIDTH: u32 = 128;
@@ -54,23 +55,9 @@ fn main() -> Result<(), std::io::Error> {
 		*pixel += shader(pixel, centered_coord);
 	}
 
-	let final_image: Vec<u8> = renderer
-		.surface
-		.iter()
-		.flat_map(|color| {
-			[
-				(color.x * 255.0) as u8,
-				(color.y * 255.0) as u8,
-				(color.z * 255.0) as u8,
-				(color.w * 255.0) as u8,
-			]
-			.into_iter()
-		})
-		.collect();
-
 	write_file(
 		"/home/creatorsiso/dev/basic-ray-tracer/result.png",
-		final_image.as_slice(),
+		renderer.final_image().as_slice(),
 	)
 }
 
