@@ -1,4 +1,4 @@
-use glam::{vec2, vec4, Vec4};
+use glam::{vec2, vec4, Vec2, Vec4};
 use rand::Rng;
 
 use crate::camera::Camera;
@@ -53,13 +53,14 @@ impl Renderer for CpuRenderer {
 
 		for (index, pixel) in self.surface.iter_mut().enumerate() {
 			for _ in 0..self.samples {
-				// Coordinates with 0..1 range
-				let mut coord = vec2(
+				let mut coord = Vec2 {
 					// Random offset for antialiasing + Index which increases by one each "column"
-					((rng_iter.next().unwrap_or_default() + index as f32) / self.width) % 1.,
+					x: ((rng_iter.next().unwrap_or_default() + index as f32) / self.width) % 1.,
+
 					// Random offset for antialiasing + Index which increases by one each "row"
-					(rng_iter.next().unwrap_or_default() + (index as f32 / self.width).floor()) / self.height,
-				);
+					y: (rng_iter.next().unwrap_or_default() + (index as f32 / self.width).floor())
+						/ self.height,
+				};
 
 				coord.y = coord.y * -1. + 1.; // Flip y axis
 				coord = coord * 2.0 - vec2(1.0, 1.0); // Remap 0..1 to -1..1
@@ -67,12 +68,12 @@ impl Renderer for CpuRenderer {
 				let ray = self.camera.get_ray(coord.x, coord.y);
 
 				if let Some(HitRecord { normal, .. }) = self.scene.hit(&ray) {
-					let normal = (normal + 1.) * 0.5;
 					*pixel += vec4(normal.x, normal.y, normal.z, 1.);
-				} else {
-					*pixel += vec4(coord.x, coord.y, 0., 0.4)
-					// vec4(0., 0., 0., 1.0)};
+					continue;
 				}
+
+				*pixel += vec4(coord.x, coord.y, 0., 0.5);
+				// *pixel += vec4(0., 0., 0., 1.0);
 			}
 		}
 
