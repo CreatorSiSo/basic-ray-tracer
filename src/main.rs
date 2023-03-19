@@ -16,9 +16,9 @@ use primitive::{Primitive, Sphere};
 use renderer::{CpuRenderer, Renderer};
 use scene::Scene;
 
-const WIDTH: u32 = 128;
+const WIDTH: u32 = 3840;
 const WIDTH_F: f32 = WIDTH as f32;
-const HEIGHT: u32 = 128;
+const HEIGHT: u32 = 2160;
 const HEIGHT_F: f32 = HEIGHT as f32;
 
 fn main() -> Result<(), std::io::Error> {
@@ -30,10 +30,7 @@ fn main() -> Result<(), std::io::Error> {
 
 	renderer.render();
 
-	write_file(
-		"/home/creatorsiso/dev/basic-ray-tracer/result.png",
-		renderer.final_image().as_slice(),
-	)
+	write_file("./result.png", renderer.final_image().as_slice())
 }
 
 fn write_file<P>(path: P, data: &[u8]) -> Result<(), std::io::Error>
@@ -41,14 +38,14 @@ where
 	P: std::convert::AsRef<std::path::Path>,
 {
 	let file = File::create(path)?;
-	let w = BufWriter::new(file);
+	let file_writer = BufWriter::new(file);
 
-	let mut encoder = png::Encoder::new(w, WIDTH, HEIGHT);
+	let mut encoder = png::Encoder::new(file_writer, WIDTH, HEIGHT);
 	encoder.set_color(png::ColorType::Rgba);
 	encoder.set_depth(png::BitDepth::Eight);
 
-	let mut writer = encoder.write_header()?;
-	writer.write_image_data(data)?;
+	let mut enc_writer = encoder.write_header()?;
+	enc_writer.write_image_data(data)?;
 
 	Ok(())
 }

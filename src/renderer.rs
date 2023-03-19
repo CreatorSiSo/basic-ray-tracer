@@ -1,5 +1,4 @@
 use glam::{vec2, vec4, Vec2, Vec4};
-use rand::Rng;
 
 use crate::camera::Camera;
 use crate::hittable::{HitRecord, Hittable};
@@ -48,10 +47,14 @@ impl Renderer for CpuRenderer {
 	}
 
 	fn render(&mut self) {
-		let rng = rand::thread_rng();
-		let mut rng_iter = rng.sample_iter(rand::distributions::Uniform::<f32>::new(0., 1.));
+		use rand::Rng;
+		use rayon::prelude::*;
 
-		for (index, pixel) in self.surface.iter_mut().enumerate() {
+		let pixels = self.surface.par_iter_mut().enumerate();
+		pixels.for_each(|(index, pixel)| {
+			let mut rng_iter =
+				rand::thread_rng().sample_iter(rand::distributions::Uniform::<f32>::new(0., 1.));
+
 			for _ in 0..self.samples {
 				let mut coord = Vec2 {
 					// Random offset for antialiasing + Index which increases by one each "column"
@@ -65,6 +68,9 @@ impl Renderer for CpuRenderer {
 				coord.y = coord.y * -1. + 1.; // Flip y axis
 				coord = coord * 2.0 - vec2(1.0, 1.0); // Remap 0..1 to -1..1
 
+				let aspect_ratio = self.width / self.height;
+				coord.x *= aspect_ratio;
+
 				let ray = self.camera.get_ray(coord.x, coord.y);
 
 				if let Some(HitRecord { normal, .. }) = self.scene.hit(&ray) {
@@ -75,7 +81,7 @@ impl Renderer for CpuRenderer {
 				*pixel += vec4(coord.x, coord.y, 0., 0.5);
 				// *pixel += vec4(0., 0., 0., 1.0);
 			}
-		}
+		});
 
 		self.finished = true;
 	}
